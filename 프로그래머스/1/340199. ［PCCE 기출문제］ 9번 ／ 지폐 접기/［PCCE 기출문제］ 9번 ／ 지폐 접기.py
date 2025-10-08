@@ -14,7 +14,5 @@ def solution(wallet, bill):
         else:
             bill[1] = bill[1]//2
             
-        if min(bill)<10:
-            break
         
     return answer
