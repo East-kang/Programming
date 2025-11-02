@@ -12,11 +12,8 @@ arr = list(map(int, input().split()))
 M = int(input())
         
 start = M//N
-end = M-N+1
+end = max(arr)
 ans = 0
-if sum(i for i in arr) <= M:
-    print(max(arr))
-    exit(0)
     
 while start<=end:
     mid = (start+end)//2
