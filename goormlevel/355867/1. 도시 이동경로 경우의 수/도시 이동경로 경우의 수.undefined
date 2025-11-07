@@ -1,0 +1,21 @@
+"""
+문제 오류: 10^9 + 7로 나눈 값이 아니라 나머지 값을 출력해야 함.
+[Combination 활용 문제]
+1. 1->N 사이에 도시들의 연결 다리는 총 N-1개가 있음
+2. 마지막 다리는 무조건 연결되므로 다리를 끊을지 말지 정할 갯수는 N-2개임
+3. 따라서 2^(N-2)개가 총 경우의 수
+pow(a, b, c) = (a^b) mod c
+"""
+
+import sys
+input = sys.stdin.readline
+
+N = int(input())
+
+if N == 1:
+	ans = 1
+elif N == 0:
+	ans = 0
+else:
+	ans = pow(2, N-2, 1000000007)
+print(ans)
