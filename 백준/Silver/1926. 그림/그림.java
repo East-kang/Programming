@@ -2,18 +2,33 @@ import java.io.*;
 import java.util.*;
 
 public class Main {
-	public static int bfs(int[][] map, int y, int x, int dimentions) {
-		if(x<0 || x>=map[0].length || y<0 || y>=map.length || map[y][x] == 0) {
-			return dimentions;
+	static int[] dy = {0, 1, 0, -1};
+	static int[] dx = {1, 0, -1, 0};
+	
+	public static int bfs(int[][] map, int y, int x) {
+		Deque<int[]> q = new ArrayDeque<>();
+		q.offer(new int[]{y,x});
+		map[y][x] = 0;
+		int dimention = 1;
+		
+		while(!q.isEmpty()) {
+			int[] point = q.poll();
+			
+			for(int i=0; i<4; i++) {
+				int ny = point[0]+dy[i];
+				int nx = point[1]+dx[i];
+				
+				if(ny>=0 && ny<map.length && nx>=0 && nx<map[0].length && map[ny][nx] == 1) {
+					map[ny][nx] = 0;
+					q.offer(new int[]{ny, nx});
+					dimention++;
+				}
+			}
 		}
 		
-		map[y][x] = 0;
-		dimentions += (bfs(map, y+1, x, dimentions)
-				+ bfs(map, y-1, x, dimentions)
-				+ bfs(map, y, x+1, dimentions)
-				+ bfs(map, y, x-1, dimentions) + 1);
-		return dimentions;
+		return dimention;
 	}
+	
 	public static void main(String[] args) throws Exception {
 		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
 		BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(System.out));
@@ -31,18 +46,17 @@ public class Main {
 		}
 		
 		int count = 0;
-		int dimentions = 0;
 		int max = 0;
 		
 		for(int i=0; i<n; i++) {
-			for(int j=0; j<m; j++) {		
+			for(int j=0; j<m; j++) {
 				if(map[i][j] == 1) {
-					max = Math.max(max, bfs(map, i, j, dimentions));
+					max = Math.max(max, bfs(map, i, j));
 					count++;
-					dimentions = 0;
 				}
 			}
 		}
+		
 		bw.write(count + "\n" + max);
 		bw.close();
 	}
