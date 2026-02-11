@@ -37,17 +37,12 @@ public class Main {
 		// 다리[출발 섬 번호][도착 섬 번호][방향] = 거리
 		bridges = make_bridges(edges);
 		
-		// 섬 연결 여부 확인(BFS)
-		if(!bfs()) {
-			bw.write("-1");
-		} else {
-			// 최단 거리 구하기 (prim)
-			bw.write(prim());
-		}
+		// 최단 거리 구하기 (Prim)
+		bw.write(prim());
 		bw.close();
 	}
 	
-	// 섬 개수 구하기
+	// 섬 개수 구하기 (BFS)
 	private static void islandCnt(int[][] map, boolean[][] visited, int y, int x, int num) {
 		Queue<int[]> q = new ArrayDeque<>();
 		q.offer(new int[] {y,x});
@@ -133,35 +128,6 @@ public class Main {
 		return bridges;
 	}
 	
-	// 연결 여부 확인 (BFS)
-		private static boolean bfs() {
-			Queue<Integer> q = new ArrayDeque<>();
-			boolean[] visited = new boolean[island_Cnt+1];	 // 섬 방문 여부
-			q.offer(1);
-			visited[1] = true;
-			while(!q.isEmpty()) {
-				int land = q.poll();
-				
-				for(int i=1; i<=island_Cnt; i++) {
-					for(int j=0; j<4; j++) {
-						if(!visited[i] && bridges[land][i][j] < Integer.MAX_VALUE) {
-							q.offer(i);
-							visited[i] = true;
-							break;
-						}
-						if(visited[i])
-							break;
-					}
-				}
-			}
-			
-			// 모든 섬 방문 여부
-			for(int i=1; i<=island_Cnt; i++)
-				if(!visited[i])
-					return false;
-			return true;
-		}
-	
 	// 최단거리 구하기 (Prim)
 	private static String prim() {
 		// 인접 리스트 구현
@@ -196,6 +162,9 @@ public class Main {
 				}
 			}
 			
+			// 섬 전체 연결 x
+			if(minIdx == -1)	return "-1";
+			
 			visited[minIdx] = true;
 			for(int[] island: adj[minIdx]) {
 				int land_num = island[0];
@@ -207,7 +176,7 @@ public class Main {
 		}
 		
 		int sum = 0;
-		for(int i=1; i<=island_Cnt; i++) 
+		for(int i=1; i<=island_Cnt; i++)
 			sum += distance[i];
 		
 		return Integer.toString(sum);
