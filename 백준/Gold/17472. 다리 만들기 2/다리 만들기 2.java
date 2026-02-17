@@ -1,20 +1,26 @@
+/*
+1. 전체 돌면서 섬 번호 부여하기 (재귀)
+2. 전체 돌면서 우하 2방탐색 하면서 다리 길이 뽑으면서 최솟값 갱신 (이차원 배열: 출발->도착 = 거리)
+3. Prim 알고리즘으로 최소 거리 찾기
+ */
+
 import java.io.*;
 import java.util.*;
-public class Main {
-	static int[] dx = {0,1,0,-1};
-	static int[] dy = {-1,0,1,0};	// 0:상, 1:우, 2:하, 3:좌
-	static int N, M, island_Cnt=0, map[][], bridges[][][];
+
+public class Main{
+	static int N, M, idx, result=0, map[][], bridge[][];
+	static boolean visited[][];
+	static int[] dx = {0, 1, 0, -1};
+	static int[] dy = {1, 0, -1, 0};	// 하, 우, 상, 좌
 	
 	public static void main(String[] args) throws Exception{
 		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-		BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(System.out));
 		StringTokenizer st = new StringTokenizer(br.readLine());
-		
 		N = Integer.parseInt(st.nextToken());
 		M = Integer.parseInt(st.nextToken());
 		map = new int[N][M];
+		visited = new boolean[N][M];
 		
-		island_Cnt = 0;
 		for(int i=0; i<N; i++) {
 			st = new StringTokenizer(br.readLine());
 			for(int j=0; j<M; j++) {
@@ -22,163 +28,107 @@ public class Main {
 			}
 		}
 		
-		// 섬 개수 구하기
-		boolean[][] visited = new boolean[N][M];
+		idx=1;
 		for(int i=0; i<N; i++) {
 			for(int j=0; j<M; j++) {
-				if(!visited[i][j] && map[i][j] == 1)
-					islandCnt(map, visited, i, j, ++island_Cnt);
+				if(map[i][j]!=0 && !visited[i][j]) {
+					recursive(i, j, idx++);
+				}
 			}
 		}
-		
-		// 섬 테두리(edges) 저장(배열+리스트)
-		List<int[]>[] edges = get_edges_list();
-		
-		// 다리[출발 섬 번호][도착 섬 번호][방향] = 거리
-		bridges = make_bridges(edges);
-		
-		// 최단 거리 구하기 (Prim)
-		bw.write(prim());
-		bw.close();
-	}
-	
-	// 섬 개수 구하기 (BFS)
-	private static void islandCnt(int[][] map, boolean[][] visited, int y, int x, int num) {
-		Queue<int[]> q = new ArrayDeque<>();
-		q.offer(new int[] {y,x});
-		visited[y][x] = true;
-		map[y][x] = num;
-		
-		while(!q.isEmpty()) {
-			int[] point = q.poll();
-			int cy = point[0];
-			int cx = point[1];
-			
-			for(int i=0; i<4; i++) {
-				int ny = cy + dy[i];
-				int nx = cx + dx[i];
-				
-				if(nx<0 || ny<0 || nx>=M || ny>=N || visited[ny][nx] || map[ny][nx]==0) continue;
-				q.offer(new int[] {ny, nx});
-				visited[ny][nx] = true;
-				map[ny][nx] = num;
-			}
-		}
-	}
 
-	// 섬 테두리(edges) 반환(배열+리스트+배열)
-	private static List<int[]>[] get_edges_list() {
-		List<int[]>[] edges = new ArrayList[island_Cnt+1];
-		for(int i=1; i<=island_Cnt; i++) {
-			edges[i] = new ArrayList<>();
-		}
-
+		bridge = new int[idx][idx];
+		for(int i=1; i<idx; i++)
+			Arrays.fill(bridge[i], Integer.MAX_VALUE);
+		
 		for(int i=0; i<N; i++) {
 			for(int j=0; j<M; j++) {
-				for(int k=0; k<4; k++) {
-						if(map[i][j] > 0) {
+				if(map[i][j]!=0) {
+					for(int k=0; k<2; k++) {
 						int ny = i+dy[k];
 						int nx = j+dx[k];
-						if(nx<0 || ny<0 || nx>= M || ny>= N || map[ny][nx]!=0) continue;
-						
-						// map[i][j]: 섬 번호 / edges -> {a,b,c}: a(y좌표), b(x좌표), c(다리방향)
-						edges[map[i][j]].add(new int[] {ny, nx, k});	// (k+2)%4 : 좌표 기준 섬->아래(2), 다리 방향->상(0)
+						if(!outOfMap(ny, nx) && map[ny][nx]==0)
+							make_bridges(ny, nx, k);
 					}
 				}
 			}
 		}
-		return edges;
+		
+		prim();
+		System.out.println(result);
 	}
 	
-	// 섬 사이 최단거리 다리 만들기
-	private static int[][][] make_bridges(List<int[]>[] edges) {
-		int[][][] bridges = new int[island_Cnt+1][island_Cnt+1][4];
-		for(int i=1; i<=island_Cnt; i++) {
-			for(int j=1; j<=island_Cnt; j++)
-				Arrays.fill(bridges[i][j], Integer.MAX_VALUE);
-		}
-		
-		for(int i=1; i<=island_Cnt; i++) {
-			for(int[] point: edges[i]) {
-				int y = point[0], x = point[1], dir = point[2];
-				int length = 1;
-				// 다리 생성
-				while(true) {
-					switch (dir) {
-					case 0: y--; break;
-					case 1: x++; break;
-					case 2: y++; break;
-					case 3: x--; break;
-					}
-					if(x<0 || y<0 || M<=x || N<=y) break;
-					
-					if(map[y][x] == 0) {
-						length++;
-					} else {
-						if(length > 1) {
-							if(bridges[i][map[y][x]][dir] > length) {
-								bridges[i][map[y][x]][dir] = length;
-							}
-						}
-						break;
-					}
-				}
-			}
-		}
-		return bridges;
+	// 맵 벗어나기 여부
+	private static boolean outOfMap(int y, int x) {
+		return (x<0 || y<0 || x>=M || y>=N);
 	}
 	
-	// 최단거리 구하기 (Prim)
-	private static String prim() {
-		// 인접 리스트 구현
-		List<int[]>[] adj = new ArrayList[island_Cnt+1];
-		for(int i=1; i<=island_Cnt; i++) {
-			adj[i] = new ArrayList<>();
-		}
+	// 섬 번호 메기기
+	private static void recursive(int y, int x, int num) {
+		map[y][x] = num;
+		visited[y][x] = true;
 		
-		// 인접 리스트(양방향)
-		for(int i=1; i<=island_Cnt; i++) {
-			for(int j=1; j<=island_Cnt; j++) {
-				for(int k=0; k<4; k++) {
-					if(bridges[i][j][k] != Integer.MAX_VALUE) {
-						adj[i].add(new int[] {j, bridges[i][j][k]});	// i섬 -> j섬 : weight=bridges[i][j][k]
-					}
+		for(int i=0; i<4; i++) {
+			int ny = y+dy[i];
+			int nx = x+dx[i];
+			
+			if(outOfMap(ny, nx) || visited[ny][nx] || map[ny][nx] == 0) continue;
+			recursive(ny, nx, num);
+		}
+	}
+	
+	// 다리 길이 구하기
+	private static void make_bridges(int y, int x, int dir) {
+		int len=0;
+		int start=map[y-dy[dir]][x-dx[dir]];
+		
+		while(!outOfMap(y, x)) {
+			if(map[y][x]!=0) {
+				if(map[y][x] == start)
+					break;
+				if(len>1) {
+					int end = map[y][x];
+					bridge[start][end] = Math.min(bridge[start][end], len);
+					bridge[end][start] = Math.min(bridge[end][start], len);
 				}
+				break;
 			}
+			len++;
+			if(dir==0) y++;
+			else x++;
 		}
-		
-		int[] distance = new int[island_Cnt+1];
+	}
+	
+	// prim 알고리즘
+	private static void prim() {
+		boolean[] v = new boolean[idx];
+		int[] distance = new int[idx];
 		Arrays.fill(distance, Integer.MAX_VALUE);
-		boolean[] visited = new boolean[island_Cnt+1];
-		
 		distance[1] = 0;
-		for(int i=1; i<=island_Cnt; i++) {
+		for(int i=1; i<idx; i++) {
 			int minIdx = -1;
 			int minD = Integer.MAX_VALUE;
-			for(int j=1; j<=island_Cnt; j++) {
-				if(!visited[j] && distance[j] < minD) {
-					minIdx = j;
+			for(int j=1; j<idx; j++) {
+				if(!v[j] && distance[j] < minD) {
 					minD = distance[j];
+					minIdx = j;
 				}
 			}
 			
-			// 섬 전체 연결 x
-			if(minIdx == -1)	return "-1";
+			if(minIdx == -1) {
+				result = -1;
+				return;
+			}
+			v[minIdx] = true;
 			
-			visited[minIdx] = true;
-			for(int[] island: adj[minIdx]) {
-				int land_num = island[0];
-				int weight = island[1];
-				if(!visited[land_num] && weight<distance[land_num]) {
-					distance[land_num] = weight;
-				}
+			for(int j=1; j<idx; j++) {
+				if(minIdx!=j && !v[j] && bridge[minIdx][j]<Integer.MAX_VALUE)
+					distance[j] = Math.min(distance[j], bridge[minIdx][j]);
 			}
 		}
 		
-		int sum = 0;
-		for(int i=1; i<=island_Cnt; i++)
-			sum += distance[i];
-		
-		return Integer.toString(sum);
+		for(int i=1; i<idx; i++) {
+			result += distance[i];
+		}
 	}
 }
