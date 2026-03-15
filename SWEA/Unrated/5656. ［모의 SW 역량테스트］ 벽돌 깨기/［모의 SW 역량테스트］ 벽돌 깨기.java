@@ -1,13 +1,10 @@
 import java.io.*;
 import java.util.*;
-
 public class Solution {
 
-	static int N, W, H, map[][], temp[][], pos[];
-	static int[] dx = {1, 0, -1, 0};
-	static int[] dy = {0, 1, 0, -1};
-	static List<int[]> list;
-	static int init_blocks, change_blocks, result;
+	static int N, W, H, map[][], temp[][], arr[], blocks, result, cnt;
+	static int dx[] = {1, 0, -1, 0};
+	static int dy[] = {0, 1, 0, -1};
 	
 	public static void main(String[] args) throws Exception{
 		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
@@ -18,109 +15,89 @@ public class Solution {
 			W = Integer.parseInt(st.nextToken());
 			H = Integer.parseInt(st.nextToken());
 			map = new int[H][W];
-			pos = new int[N];
-			list = new ArrayList<>();
-
-			init_blocks = 0;
+			temp = new int[H][W];
+			arr = new int[N];
+			blocks = 0;
 			result = Integer.MAX_VALUE;
 			for(int i=0; i<H; i++) {
 				st = new StringTokenizer(br.readLine());
 				for(int j=0; j<W; j++) {
 					map[i][j] = Integer.parseInt(st.nextToken());
-					if(map[i][j] != 0)	init_blocks++;
+					if(map[i][j] > 0)	blocks++;
 				}
 			}
-
-			permutation(0);
 			
-			for(int[] position: list) {
-				change_blocks = init_blocks;
-				
-				temp = new int[H][W];
-				for(int i=0; i<H; i++)
-					temp[i] = map[i].clone();
-				
-				for(int x: position)
-					fallBall(x);
-
-				result = Math.min(result, change_blocks);
-			}
+			permutation(0);
 			
 			System.out.println("#" + t + " " + result);
 		}
 	}
 
-	private static void permutation(int cnt) {
-		if(cnt==N) {
-			list.add(Arrays.copyOf(pos, cnt));
-			return;
-		}
-		
-		for(int i=0; i<W; i++) {
-			pos[cnt] = i;
-			permutation(cnt+1);
-		}
-	}
-	
-	private static void fallBall(int p) {
-		int cy=0, cx=p;
-		
-		while(cy<H) {
-			if(temp[cy][cx] == 0)
-				cy++;
-			else {
-				bomb(cy, cx);
-				setGravity(cx);
+	private static void ballFall(int pos) {
+		for(int y=0; y<H; y++) {
+			if(temp[y][pos] > 0) {
+				bomb(y, pos);
+				setGravity();
 				break;
 			}
+		}
+	}
+
+	private static void setGravity() {
+		Deque<Integer> q = new ArrayDeque<>();
+		for(int x=0; x<W; x++) {
+			int ey = H-1;	boolean gravity = false;
+			for(int y=H-1; y>=0; y--) {
+				if(!gravity && temp[y][x]==0) { gravity=true;  ey=y; }
+				if(gravity && temp[y][x] > 0) {
+					q.offer(temp[y][x]);
+					temp[y][x] = 0;
+				}
+			}
+			while(!q.isEmpty()) { temp[ey--][x] = q.poll(); }
 		}
 	}
 
 	private static void bomb(int y, int x) {
 		Deque<int[]> q = new ArrayDeque<>();
 		boolean visited[][] = new boolean[H][W];
-		
 		q.offer(new int[] {y, x});
 		visited[y][x] = true;
 		
 		while(!q.isEmpty()) {
-			int[] position = q.poll();
-			int cy = position[0];
-			int cx = position[1];
+			int start[] = q.poll();
+			int cy = start[0];
+			int cx = start[1];
 			int range = temp[cy][cx]-1;
 			temp[cy][cx] = 0;
-			change_blocks--;
+			cnt--;
 			
 			for(int i=0; i<4; i++) {
 				for(int j=1; j<=range; j++) {
-					int ny = cy+dy[i]*j;
-					int nx = cx+dx[i]*j;
-					
+					int ny = cy + dy[i] * j;
+					int nx = cx + dx[i] * j;
 					if(ny<0 || nx<0 || ny>=H || nx>=W || visited[ny][nx] || temp[ny][nx]==0) continue;
-					
 					q.offer(new int[] {ny, nx});
 					visited[ny][nx] = true;
 				}
 			}
 		}
 	}
-	
-	private static void setGravity(int x) {
-		boolean gravity[] = new boolean[W];
+
+	private static void permutation(int count) {
+		if(count == N) {
+			cnt = blocks;
+			for(int i=0; i<H; i++)
+				temp[i] = map[i].clone();
+			for(int pos : arr)
+				ballFall(pos);
+			result = Math.min(result, cnt);
+			return;
+		}
 		
-		for(int i=H-1; i>=0; i--) {
-			for(int j=W-1; j>=0; j--) {
-				if(temp[i][j] == 0)
-					gravity[j] = true;
-				else {
-					if(gravity[j]) {
-						int ny = i;
-						while(++ny<H && temp[ny][j]==0) {}
-						temp[ny-1][j] = temp[i][j];
-						temp[i][j] = 0;
-					}
-				}
-			}
+		for(int i=0; i<W; i++) {
+			arr[count] = i;
+			permutation(count+1);
 		}
 	}
 }
