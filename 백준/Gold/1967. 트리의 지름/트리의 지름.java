@@ -44,13 +44,17 @@ public class Main {
 			return nodes[n].weight;
 		}
 		
+		int first = 0, second = 0;
 		PriorityQueue<Integer> pq = new PriorityQueue<>((a, b) -> b - a);
 		for(Node node : nodes[n].children) {
 			int weight = dfs(node.n);
-			pq.offer(weight);
+			if(weight > first) {
+				second = first;
+				first = weight;
+			} else if(weight > second) {
+				second = weight;
+			}
 		}
-		int first = pq.poll();
-		int second = pq.isEmpty()? 0 : pq.poll();
 		result = Math.max(result, first+second);
 		nodes[n].sum = first+second;
 		nodes[n].weight += first;
