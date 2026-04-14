@@ -1,7 +1,7 @@
 import java.io.*;
 import java.util.*;
 public class Solution {
-	
+	static int INF = 10000;
 	public static void main(String[] args) throws Exception{
 		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
 		StringBuilder sb = new StringBuilder();
@@ -12,24 +12,25 @@ public class Solution {
 			int N = Integer.parseInt(st.nextToken());
 			int[][] map = new int[N][N];
 			int[] dist = new int[N];
-			int result = Integer.MAX_VALUE;
+			int result = INF;
 			for(int i=0; i<N; i++) {
 				for(int j=0; j<N; j++) {
 					int x = Integer.parseInt(st.nextToken());
-					map[i][j] = (x==0? (i==j? 0: 1000) : x);
+					map[i][j] = (x==0? (i==j? 0: INF) : x);
+				}
+			}
+			
+			for(int k=0; k<N; k++) {
+				for(int i=0; i<N; i++) {
+					for(int j=0; j<N; j++) {
+						map[i][j] = Math.min(map[i][j], map[i][k] + map[k][j]);
+					}
 				}
 			}
 			
 			for(int i=0; i<N; i++) {
 				for(int j=0; j<N; j++) {
-					if(i == j) continue;
-					if(map[i][j] == 1000) {
-						for(int k=0; k<N; k++) {
-							if(k == i || k == j) continue;
-							map[i][j] = Math.min(map[i][j], map[i][k] + map[k][j]);
-						}
-					}
-					dist[i] += map[i][j]; 
+					dist[i] += map[i][j];
 				}
 				result = Math.min(result, dist[i]);
 			}
