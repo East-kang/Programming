@@ -45,7 +45,6 @@ public class Main {
 		}
 		
 		int first = 0, second = 0;
-		PriorityQueue<Integer> pq = new PriorityQueue<>((a, b) -> b - a);
 		for(Node node : nodes[n].children) {
 			int weight = dfs(node.n);
 			if(weight > first) {
