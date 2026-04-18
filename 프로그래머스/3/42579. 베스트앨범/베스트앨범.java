@@ -42,9 +42,9 @@ class Solution {
         int idx = 0;
         while(!pq.isEmpty()) {
             Genre g = pq.poll();
-            if(map.get(g.key).id1st != -1)
+            if(g.id1st != -1)
                 answer[idx++] = map.get(g.key).id1st;
-            if(map.get(g.key).id2nd != -1)
+            if(g.id2nd != -1)
                 answer[idx++] = map.get(g.key).id2nd;
         }
         return answer;
